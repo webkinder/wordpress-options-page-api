@@ -257,7 +257,7 @@ if ( !function_exists( 'wedevs_admin_init' ) ):
             )
         );
 
-        $settings_api = new WeDevs_Settings_API;
+        $settings_api = new \WebKinder\SettingsAPI();
 
         //set sections and fields
         $settings_api->set_sections( $sections );
@@ -284,7 +284,7 @@ add_action( 'admin_menu', 'wedevs_admin_menu' );
  */
 if ( !function_exists( 'wedevs_plugin_page' ) ):
     function wedevs_plugin_page() {
-        $settings_api = new WeDevs_Settings_API;
+        $settings_api = new \WebKinder\SettingsAPI();
 
         echo '<div class="wrap">';
         settings_errors();
