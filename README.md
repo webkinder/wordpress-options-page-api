@@ -57,6 +57,9 @@ Screenshot
 
 Contributions are welcome. Send us your PR's.
 
+## Generate the docs
+`cd docs && bash generate-docs.sh -d . && cd -`
+
 Frequently Asked Questions
 ---------------
 
