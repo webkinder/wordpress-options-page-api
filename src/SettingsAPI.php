@@ -1,16 +1,12 @@
 <?php
+/*
+ * Return early if this class was already loaded as we want to be able to load the class for multiple plugins
+ *
+*/
 
-/**
- * weDevs Settings API wrapper class
- *
- * @version 1.3 (27-Sep-2016)
- *
- * @author Tareq Hasan <tareq@weDevs.com>
- * @link https://tareq.co Tareq Hasan
- * @example example/oop-example.php How to use the class
- */
-if ( !class_exists( 'WeDevs_Settings_API' ) ):
-class WeDevs_Settings_API {
+if (class_exists('\WebKinder\SettingsAPI')) return;
+
+class SettingsAPI {
 
     /**
      * settings sections array
@@ -106,8 +102,8 @@ class WeDevs_Settings_API {
             if ( isset($section['desc']) && !empty($section['desc']) ) {
                 $section['desc'] = '<div class="inside">' . $section['desc'] . '</div>';
                 $callback = function() use ( $section ) {
-		    echo str_replace( '"', '\"', $section['desc'] );
-		};
+                    echo str_replace( '"', '\"', $section['desc'] );
+                };
             } else if ( isset( $section['callback'] ) ) {
                 $callback = $section['callback'];
             } else {
@@ -537,10 +533,10 @@ class WeDevs_Settings_API {
                         do_settings_sections( $form['id'] );
                         do_action( 'wsa_form_bottom_' . $form['id'], $form );
                         if ( isset( $this->settings_fields[ $form['id'] ] ) ):
-                        ?>
-                        <div style="padding-left: 10px">
-                            <?php submit_button(); ?>
-                        </div>
+                            ?>
+                            <div style="padding-left: 10px">
+                                <?php submit_button(); ?>
+                            </div>
                         <?php endif; ?>
                     </form>
                 </div>
@@ -584,13 +580,13 @@ class WeDevs_Settings_API {
                 }
                 $('.group .collapsed').each(function(){
                     $(this).find('input:checked').parent().parent().parent().nextAll().each(
-                    function(){
-                        if ($(this).hasClass('last')) {
-                            $(this).removeClass('hidden');
-                            return false;
-                        }
-                        $(this).filter('.hidden').removeClass('hidden');
-                    });
+                        function(){
+                            if ($(this).hasClass('last')) {
+                                $(this).removeClass('hidden');
+                                return false;
+                            }
+                            $(this).filter('.hidden').removeClass('hidden');
+                        });
                 });
 
                 if (activetab != '' && $(activetab + '-tab').length ) {
@@ -633,7 +629,7 @@ class WeDevs_Settings_API {
                     // Finally, open the modal
                     file_frame.open();
                 });
-        });
+            });
         </script>
         <?php
         $this->_style_fix();
@@ -643,16 +639,14 @@ class WeDevs_Settings_API {
         global $wp_version;
 
         if (version_compare($wp_version, '3.8', '<=')):
-        ?>
-        <style type="text/css">
-            /** WordPress 3.8 Fix **/
-            .form-table th { padding: 20px 10px; }
-            #wpbody-content .metabox-holder { padding-top: 5px; }
-        </style>
+            ?>
+            <style type="text/css">
+                /** WordPress 3.8 Fix **/
+                .form-table th { padding: 20px 10px; }
+                #wpbody-content .metabox-holder { padding-top: 5px; }
+            </style>
         <?php
         endif;
     }
 
 }
-
-endif;
