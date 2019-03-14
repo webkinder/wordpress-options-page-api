@@ -4,7 +4,7 @@
     "description": "WordPress settings api abstraction class",
     "keywords": ["wp","wordpress", "settings-api"],
     "homepage": "https://github.com/webkinder/wordpress-options-page-api",
-    "license": "GPLv2",
+    "license": "GPL-2.0-or-later",
     "authors": [
         {
             "name": "Pascal Knecht",
