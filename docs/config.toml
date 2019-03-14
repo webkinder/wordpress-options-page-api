@@ -1,0 +1,8 @@
+baseURL = "http://example.org/"
+languageCode = "en-us"
+title = "WebKinder WordPress Settings API"
+theme = "kube"
+[[menu.main]]
+    name = "Docs"
+    weight = -100
+    url = "/docs/"

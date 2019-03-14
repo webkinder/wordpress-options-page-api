@@ -68,6 +68,7 @@ This is an API for the WordPress Settings API
 This is an extended version of [tareq1988](https://github.com/tareq1988/wordpress-settings-api-class) with more features and opinionated changes and additions.
 
 Changelog:
+
 ----------------------
 ```
 v1.0 (14 March, 2019)

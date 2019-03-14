@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>WebKinder WordPress Settings API</title>
+    <link>http://example.org/</link>
+    <description>Recent content on WebKinder WordPress Settings API</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 10 Apr 2017 16:43:08 +0100</lastBuildDate>
+    
+	<atom:link href="http://example.org/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Usage</title>
+      <link>http://example.org/docs/usage/</link>
+      <pubDate>Mon, 10 Apr 2017 16:43:08 +0100</pubDate>
+      
+      <guid>http://example.org/docs/usage/</guid>
+      <description>Usage
+(new \WebKinder\SettingsAPI()) -&amp;gt;set_sections( [ [ &#39;id&#39; =&amp;gt; &#39;wedevs_basics&#39;, &#39;title&#39; =&amp;gt; __( &#39;Basic Settings&#39;, &#39;wedevs&#39; ) ] ] ) -&amp;gt;set_fields([ &#39;wedevs_basics&#39; =&amp;gt; [ array( &#39;name&#39; =&amp;gt; &#39;text_val&#39;, &#39;label&#39; =&amp;gt; __( &#39;Text Input&#39;, &#39;wedevs&#39; ), &#39;desc&#39; =&amp;gt; __( &#39;Text input description&#39;, &#39;wedevs&#39; ), &#39;placeholder&#39; =&amp;gt; __( &#39;Text Input placeholder&#39;, &#39;wedevs&#39; ), &#39;type&#39; =&amp;gt; &#39;text&#39;, &#39;default&#39; =&amp;gt; &#39;Title&#39;, &#39;sanitize_callback&#39; =&amp;gt; &#39;sanitize_text_field&#39; ), array( &#39;name&#39; =&amp;gt; &#39;number_input&#39;, &#39;label&#39; =&amp;gt; __( &#39;Number Input&#39;, &#39;wedevs&#39; ), &#39;desc&#39; =&amp;gt; __( &#39;Number field with validation callback `floatval`&#39;, &#39;wedevs&#39; ), &#39;placeholder&#39; =&amp;gt; __( &#39;1.</description>
+    </item>
+    
+  </channel>
+</rss>
