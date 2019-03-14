@@ -1,4 +1,7 @@
 <?php
+
+namespace WebKinder;
+
 /*
  * Return early if this class was already loaded as we want to be able to load the class for multiple plugins
  *
