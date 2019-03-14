@@ -1,8 +1,7 @@
 What is this?
 ---------------
 
-It's a PHP class wrapper for handling WordPress [Settings API](http://codex.wordpress.org/Settings_API). Gives a very handy way to build theme or plugins option panel.
-
+It's a PHP class wrapper for handling WordPress [Settings API](http://codex.wordpress.org/Settings_API). This is an easily accessible OOP API for developers to use in their own plugins.
 
 ## Package Installation (via Composer)
 
@@ -11,7 +10,7 @@ To install this package, edit your `composer.json` file:
 ```js
 {
     "require": {
-        "tareq1988/wordpress-settings-api-class": "dev-master"
+        "webkinder/wordpress-options-page-api": "1.0.0"
     }
 }
 ```
@@ -23,9 +22,7 @@ Now run:
 Usage Example
 ---------------
 
-Checkout the [examples](https://github.com/tareq1988/wordpress-settings-api-class/tree/master/example) folder for OOP and procedural example. They were called in [plugin.php](https://github.com/tareq1988/wordpress-settings-api-class/blob/master/plugin.php) file.
-
-A detailed tutorial can be found [here](https://tareq.co/2012/06/wordpress-settings-api-php-class/).
+Checkout the [examples](https://github.com/tareq1988/wordpress-settings-api-class/tree/master/example) folder for OOP and procedural example.
 
 #### Retrieving saved options
 
@@ -54,50 +51,26 @@ function prefix_get_option( $option, $section, $default = '' ) {
 Screenshot
 ----------------------
 
-![Option Panel](https://github.com/tareq1988/wordpress-settings-api-class/raw/master/screenshot-1.png "The options panel build on the fly using the PHP Class")
+![Option Panel](https://github.com/webkinder/wordpress-options-page-api/raw/master/screenshot-1.png "The options panel build on the fly using the PHP Class")
 
+## Contributing
 
+Contributions are welcome. Send us your PR's.
 
 Frequently Asked Questions
 ---------------
 
 #### What this plugin for?
 
-It's mainly a plugin that demonstrates the Settings API PHP class
+This is an API for the WordPress Settings API
 
-#### Whats the facility?
-
-A plugin or theme developer can build their options panel with Settings API easily
-
-#### What is Settings API ?
-
-Settings API is a functionality from WordPress that helps developers to save their options data very easily and securely.
-More about [Settings API](http://codex.wordpress.org/Settings_API).
-
+## Acknowledgments
+This is an extended version of [tareq1988](https://github.com/tareq1988/wordpress-settings-api-class) with more features and opinionated changes and additions.
 
 Changelog:
 ----------------------
 ```
-v1.3 (27 September, 2016)
+v1.0 (14 March, 2019)
 ------------------------
-- [new] Placeholder support for text and textarea input
-- [new] min, max and step support for number field
-- [fix] Empty multicheck saving warning
-- [improved] Don't show the navigation if only one section exists
-
-v1.1 (23 April, 2015)
-------------------------
-- [new] Folder structure updated
-- [new] composer support added
-- [new] Number field added
-- [new] URL field added
-- [improved] wysiwyg field responsive support. Allow to pass options to wp_editor
-- [new] WP Media uploader added
-
-v1.0 (16 July, 2014)
-------------------------
-- [new] color, password and wysiwyg example added on plugin settings
-- [new] Color Picker added
-- [improved] Allow to set description for section
-- Some other old fixes ;)
+- First version published
 ```

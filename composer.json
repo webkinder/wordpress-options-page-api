@@ -1,22 +1,28 @@
 {
-    "name": "tareq1988/wordpress-settings-api-class",
+    "name": "webkinder/wordpress-options-page-api",
     "type": "library",
-    "description": "WordPress settings API Abstraction Class",
+    "description": "WordPress settings api abstraction class",
     "keywords": ["wp","wordpress", "settings-api"],
-    "homepage": "https://github.com/tareq1988/wordpress-settings-api-class",
+    "homepage": "https://github.com/webkinder/wordpress-options-page-api",
     "license": "GPLv2",
     "authors": [
+        {
+            "name": "Pascal Knecht",
+            "email": "pascal@webkinder.ch",
+            "homepage": "https://webkinder.ch",
+            "role": "Maintainer/Developer"
+        },
         {
             "name": "Tareq Hasan",
             "email": "tareq@wedevs.com",
             "homepage": "http://tareq.wedevs.com",
-            "role": "Developer"
+            "role": "Original creator"
         }
     ],
     "require": {
-        "php": ">=5.2.4"
+        "php": ">=7.0.0"
     },
     "autoload": {
-        "classmap": ["src/"]
+        "psr-4": {"WebKinder\\": "src/"}
     }
 }
