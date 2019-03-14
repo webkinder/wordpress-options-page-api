@@ -48,6 +48,10 @@ function prefix_get_option( $option, $section, $default = '' ) {
 }
 ```
 
+## Documentation
+
+Documentation can be found at [https://webkinder.github.io/wordpress-options-page-api/](https://webkinder.github.io/wordpress-options-page-api/)
+
 Screenshot
 ----------------------
 
