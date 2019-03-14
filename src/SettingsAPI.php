@@ -29,6 +29,19 @@ class SettingsAPI {
         add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
     }
 
+    public function register_page($page_title, $menu_title, $capability, $menu_slug) {
+        add_action( 'admin_menu', function () use($page_title, $menu_title, $capability, $menu_slug) {
+            add_options_page( $page_title, $menu_title, $capability, $menu_slug, function() {
+                echo '<div class="wrap">';
+                $this->show_navigation();
+                $this->show_forms();
+                echo '</div>';
+            });
+        });
+
+        return $this;
+    }
+
     /**
      * Enqueue scripts and styles
      */
@@ -96,61 +109,63 @@ class SettingsAPI {
      * registers them to WordPress and ready for use.
      */
     function admin_init() {
-        //register settings sections
-        foreach ( $this->settings_sections as $section ) {
-            if ( false == get_option( $section['id'] ) ) {
-                add_option( $section['id'] );
+        add_action('admin_init', function() {
+            //register settings sections
+            foreach ( $this->settings_sections as $section ) {
+                if ( false == get_option( $section['id'] ) ) {
+                    add_option( $section['id'] );
+                }
+
+                if ( isset($section['desc']) && !empty($section['desc']) ) {
+                    $section['desc'] = '<div class="inside">' . $section['desc'] . '</div>';
+                    $callback = function() use ( $section ) {
+                        echo str_replace( '"', '\"', $section['desc'] );
+                    };
+                } else if ( isset( $section['callback'] ) ) {
+                    $callback = $section['callback'];
+                } else {
+                    $callback = null;
+                }
+
+                add_settings_section( $section['id'], $section['title'], $callback, $section['id'] );
             }
 
-            if ( isset($section['desc']) && !empty($section['desc']) ) {
-                $section['desc'] = '<div class="inside">' . $section['desc'] . '</div>';
-                $callback = function() use ( $section ) {
-                    echo str_replace( '"', '\"', $section['desc'] );
-                };
-            } else if ( isset( $section['callback'] ) ) {
-                $callback = $section['callback'];
-            } else {
-                $callback = null;
+            //register settings fields
+            foreach ( $this->settings_fields as $section => $field ) {
+                foreach ( $field as $option ) {
+
+                    $name = $option['name'];
+                    $type = isset( $option['type'] ) ? $option['type'] : 'text';
+                    $label = isset( $option['label'] ) ? $option['label'] : '';
+                    $callback = isset( $option['callback'] ) ? $option['callback'] : array( $this, 'callback_' . $type );
+
+                    $args = array(
+                        'id'                => $name,
+                        'class'             => isset( $option['class'] ) ? $option['class'] : $name,
+                        'label_for'         => "{$section}[{$name}]",
+                        'desc'              => isset( $option['desc'] ) ? $option['desc'] : '',
+                        'name'              => $label,
+                        'section'           => $section,
+                        'size'              => isset( $option['size'] ) ? $option['size'] : null,
+                        'options'           => isset( $option['options'] ) ? $option['options'] : '',
+                        'std'               => isset( $option['default'] ) ? $option['default'] : '',
+                        'sanitize_callback' => isset( $option['sanitize_callback'] ) ? $option['sanitize_callback'] : '',
+                        'type'              => $type,
+                        'placeholder'       => isset( $option['placeholder'] ) ? $option['placeholder'] : '',
+                        'min'               => isset( $option['min'] ) ? $option['min'] : '',
+                        'max'               => isset( $option['max'] ) ? $option['max'] : '',
+                        'step'              => isset( $option['step'] ) ? $option['step'] : '',
+                    );
+
+                    add_settings_field( "{$section}[{$name}]", $label, $callback, $section, $section, $args );
+                }
             }
 
-            add_settings_section( $section['id'], $section['title'], $callback, $section['id'] );
-        }
-
-        //register settings fields
-        foreach ( $this->settings_fields as $section => $field ) {
-            foreach ( $field as $option ) {
-
-                $name = $option['name'];
-                $type = isset( $option['type'] ) ? $option['type'] : 'text';
-                $label = isset( $option['label'] ) ? $option['label'] : '';
-                $callback = isset( $option['callback'] ) ? $option['callback'] : array( $this, 'callback_' . $type );
-
-                $args = array(
-                    'id'                => $name,
-                    'class'             => isset( $option['class'] ) ? $option['class'] : $name,
-                    'label_for'         => "{$section}[{$name}]",
-                    'desc'              => isset( $option['desc'] ) ? $option['desc'] : '',
-                    'name'              => $label,
-                    'section'           => $section,
-                    'size'              => isset( $option['size'] ) ? $option['size'] : null,
-                    'options'           => isset( $option['options'] ) ? $option['options'] : '',
-                    'std'               => isset( $option['default'] ) ? $option['default'] : '',
-                    'sanitize_callback' => isset( $option['sanitize_callback'] ) ? $option['sanitize_callback'] : '',
-                    'type'              => $type,
-                    'placeholder'       => isset( $option['placeholder'] ) ? $option['placeholder'] : '',
-                    'min'               => isset( $option['min'] ) ? $option['min'] : '',
-                    'max'               => isset( $option['max'] ) ? $option['max'] : '',
-                    'step'              => isset( $option['step'] ) ? $option['step'] : '',
-                );
-
-                add_settings_field( "{$section}[{$name}]", $label, $callback, $section, $section, $args );
+            // creates our settings in the options table
+            foreach ( $this->settings_sections as $section ) {
+                register_setting( $section['id'], $section['id'], array( $this, 'sanitize_options' ) );
             }
-        }
-
-        // creates our settings in the options table
-        foreach ( $this->settings_sections as $section ) {
-            register_setting( $section['id'], $section['id'], array( $this, 'sanitize_options' ) );
-        }
+        });
     }
 
     /**
