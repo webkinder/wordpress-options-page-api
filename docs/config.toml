@@ -1,4 +1,4 @@
-baseURL = "http://example.org/"
+baseURL = "https://webkinder.github.io/wordpress-options-page-api/"
 languageCode = "en-us"
 title = "WebKinder WordPress Settings API"
 theme = "kube"
