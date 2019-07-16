@@ -57,6 +57,12 @@ Screenshot
 
 ![Option Panel](https://github.com/webkinder/wordpress-options-page-api/raw/master/screenshot-1.png "The options panel build on the fly using the PHP Class")
 
+## Actions
+
+Action to add code before submit button: do_before_submit_button
+Action to add code after submit button: do_after_submit_button
+
+
 ## Contributing
 
 Contributions are welcome. Send us your PR's.
