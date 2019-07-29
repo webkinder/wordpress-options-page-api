@@ -451,6 +451,8 @@ class SettingsAPI {
             return $options;
         }
 
+        do_action('sanitize_options', $options);
+
         foreach( $options as $option_slug => $option_value ) {
             $sanitize_callback = $this->get_sanitize_callback( $option_slug );
 
@@ -552,9 +554,11 @@ class SettingsAPI {
                         do_action( 'wsa_form_bottom_' . $form['id'], $form );
                         if ( isset( $this->settings_fields[ $form['id'] ] ) ):
                             ?>
+                            <?php do_action('do_before_submit_button', $form); ?>
                             <div style="padding-left: 10px">
                                 <?php submit_button(); ?>
                             </div>
+                        <?php do_action('do_after_submit_button', $form); ?>
                         <?php endif; ?>
                     </form>
                 </div>
