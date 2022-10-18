@@ -555,7 +555,7 @@ class SettingsAPI {
                         if ( isset( $this->settings_fields[ $form['id'] ] ) ):
                             ?>
                             <?php do_action('do_before_submit_button', $form); ?>
-                            <div style="padding-left: 10px">
+                            <div>
                                 <?php submit_button(); ?>
                             </div>
                         <?php do_action('do_after_submit_button', $form); ?>
