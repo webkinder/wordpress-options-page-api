@@ -10,7 +10,7 @@ To install this package, edit your `composer.json` file:
 ```js
 {
     "require": {
-        "webkinder/wordpress-options-page-api": "1.0.0"
+        "webkinder/wordpress-options-page-api": "2.0.0"
     }
 }
 ```
@@ -84,6 +84,12 @@ Changelog:
 
 ----------------------
 ```
+v2.0 (28 March, 2023)
+------------------------
+- Add proper versioning
+- Add conditional support
+- Add multilang support
+
 v1.0 (14 March, 2019)
 ------------------------
 - First version published
