@@ -85,28 +85,44 @@ jQuery(document).ready(function($) {
 		showConditions.forEach(condition => {
 			const [key, compare, value, onlyDescSub] = condition.split(':');
 			onlyDesc = onlyDescSub == '1';
+			let currentInput = null;
+
+			if(compare === 'checked') {
+				currentInput = document.querySelector(`[name*="${key}"][value="${value}"]`);
+			} else {
+				currentInput = document.querySelector(`[name*="${key}"]`);
+			}
 
 			if (compare === '==') {
-				if (input.value !== value) {
+				if (currentInput.value !== value) {
+					isVisible = false;
+				}
+			} else if(compare === 'checked') {
+				if (currentInput.checked === false) {
 					isVisible = false;
 				}
 			} else {
-				if (input.value === value) {
+				if (currentInput.value === value) {
 					isVisible = false;
 				}
 			}
 		});
 
 		let elementToHide = element;
-
 		if (onlyDesc === false) {
 			elementToHide = element.closest('tr');
 		}
 
 		if (isVisible) {
 			elementToHide.classList.remove('hidden');
+			element.querySelectorAll('.is-required').forEach(el => {
+				el.setAttribute('required', true);
+			});
 		} else {
 			elementToHide.classList.add('hidden');
+			element.querySelectorAll('.is-required').forEach(el => {
+				el.removeAttribute('required');
+			});
 		}
 	};
 
@@ -118,31 +134,127 @@ jQuery(document).ready(function($) {
 				wkShowOn
 			} = element.dataset;
 
-			// split with | to get multiple values
+			// Split with | to get multiple values
 			const showConditions = wkShowOn.split('|');
 
-			// loop if not empty
+			// Loop if not empty
 			if (showConditions.length) {
 				showConditions.forEach(condition => {
-					const [key] = condition.split(':');
-					const input = document.querySelector(`[name*="${key}"]`);
-					if (!!input) {
-						// TODO: decide if updated on actual input or not
-						// if (input.type === 'radio') {
-						// 	input.addEventListener('change', e => {
-						// 		handleShowOn(e.target, element, showConditions);
-						// 	});
-						// } else if (input.type === 'checkbox') {
-						// 	input.addEventListener('change', e => {
-						// 		handleShowOn(e.target, element, showConditions);
-						// 	});
-						// } else {
-						// 	input.addEventListener('input', e => {
-						// 		handleShowOn(e.target, element, showConditions);
-						// 	});
-						// }
+					const [key, compare, value] = condition.split(':');
+				
+					let input = null;
 
+					if(compare === 'checked') {
+						input = document.querySelector(`[name*="${key}"][value="${value}"]`);
+					} else {
+						input = document.querySelector(`[name*="${key}"]`);
+					}
+
+					if (!!input) {
+						if (input.type === 'radio') {
+							input.addEventListener('change', e => {
+								handleShowOn(e.target, element, showConditions);
+							});
+						} else if (input.type === 'checkbox') {
+							input.addEventListener('change', e => {
+								handleShowOn(e.target, element, showConditions);
+							});
+						} else {
+							input.addEventListener('input', e => {
+								handleShowOn(e.target, element, showConditions);
+							});
+						}
+						
 						handleShowOn(input, element, showConditions);
+					}
+				});
+			}
+		});
+	}
+
+	// Function to decide whether to disable the options field based on conditions or not
+	const handleDisabledOn = (input, element, disabledConditions) => {
+		let isDisabled = true;
+
+		disabledConditions.forEach(condition => {
+			const [key, compare, value] = condition.split(':');
+			let currentInput = null;
+
+			if(compare === 'checked') {
+				currentInput = document.querySelector(`[name*="${key}"][value="${value}"]`);
+			} else {
+				currentInput = document.querySelector(`[name*="${key}"]`);
+			}
+
+			if (compare === '==') {
+				if (currentInput.value !== value) {
+					isDisabled = false;
+				}
+			} else if(compare === 'checked') {
+				if (currentInput.checked === false) {
+					isDisabled = false;
+				}
+			} else {
+				if (currentInput.value === value){
+					isDisabled = false;
+				}
+			}
+		});
+
+		const elements = element.querySelectorAll('input, select, textarea');
+		elements.forEach(element => {
+			if(isDisabled === true) {
+				element.setAttribute('disabled', true);
+				// Uncheck if checked
+				if (element.type === 'checkbox') {
+					element.checked = false;
+				}
+			} else {
+				element.removeAttribute('disabled');
+			}
+		});
+	};
+
+	// Handle disabled_on mechanism
+	const disabledOnElements = document.querySelectorAll('[data-wk-disabled-on]');
+	if (disabledOnElements.length) {
+		disabledOnElements.forEach(element => {
+			const {
+				wkDisabledOn
+			} = element.dataset;
+
+			// Split with | to get multiple values
+			const disabledConditions = wkDisabledOn.split('|');
+
+			// Loop if not empty
+			if (disabledConditions.length) {
+				disabledConditions.forEach(condition => {
+					const [key, compare, value] = condition.split(':');
+				
+					let input = null;
+
+					if(compare === 'checked') {
+						input = document.querySelector(`[name*="${key}"][value="${value}"]`);
+					} else {
+						input = document.querySelector(`[name*="${key}"]`);
+					}
+
+					if (!!input) {
+						if (input.type === 'radio') {
+							input.addEventListener('change', e => {
+								handleDisabledOn(e.target, element, disabledConditions);
+							});
+						} else if (input.type === 'checkbox') {
+							input.addEventListener('change', e => {
+								handleDisabledOn(e.target, element, disabledConditions);
+							});
+						} else {
+							input.addEventListener('input', e => {
+								handleDisabledOn(e.target, element, disabledConditions);
+							});
+						}
+						
+						handleDisabledOn(input, element, disabledConditions);
 					}
 				});
 			}

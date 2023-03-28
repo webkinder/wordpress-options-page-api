@@ -1,3 +1,13 @@
 .wpml-hidden {
   display: none !important;
 }
+
+.form-table td {
+  padding: 20px 10px;
+}
+
+.form-table input:invalid,
+.form-table textarea:invalid,
+.form-table select:invalid {
+  border-color: red;
+}

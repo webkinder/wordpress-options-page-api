@@ -2,6 +2,7 @@
 
 namespace WebKinder;
 
+// Define the directory of this file for the assets
 if (!defined('WK_OPTIONS_API_DIR')) {
 	define('WK_OPTIONS_API_DIR', dirname(__DIR__));
 }
@@ -14,7 +15,12 @@ if (class_exists('\WebKinder\SettingsAPI')) {
 class SettingsAPI
 {
 	/**
-	 * settings sections array.
+	 * Stored options data.
+	 */
+	public $options;
+
+	/**
+	 * Settings sections array.
 	 *
 	 * @var array
 	 */
@@ -27,11 +33,29 @@ class SettingsAPI
 	 */
 	protected $settings_fields = [];
 
+	/**
+	 * Multilingual settings fields array.
+	 *
+	 * @var array
+	 */
+	protected $multilingual_settings_fields = [];
+
+	/**
+	 * Load scripts needed in admin panel on init of class.
+	 */
 	public function __construct()
 	{
 		add_action('admin_enqueue_scripts', [$this, 'admin_enqueue_scripts']);
 	}
 
+	/**
+	 * Register option pages.
+	 *
+	 * @param string $page_title
+	 * @param string $menu_title
+	 * @param string $capability
+	 * @param string $menu_slug
+	 */
 	public function register_page($page_title, $menu_title, $capability, $menu_slug)
 	{
 		add_action('admin_menu', function () use ($page_title, $menu_title, $capability, $menu_slug) {
@@ -90,11 +114,22 @@ class SettingsAPI
 	{
 		$this->settings_fields = $fields;
 
+		// Check for multilingual fields
+		if (!empty($this->settings_fields)) {
+			foreach ($this->settings_fields as $section_key => $section) {
+				foreach ($section as $field) {
+					if (isset($field['multilang']) && true === $field['multilang']) {
+						$this->multilingual_settings_fields[$section_key][$field['name']] = $field['name'];
+					}
+				}
+			}
+		}
+
 		return $this;
 	}
 
 	/**
-	 * Initialize and registers the settings sections and fileds to WordPress.
+	 * Initialize and registers the settings sections and fieeds to WordPress.
 	 *
 	 * Usually this should be called at `admin_init` hook.
 	 *
@@ -104,16 +139,17 @@ class SettingsAPI
 	public function admin_init()
 	{
 		add_action('admin_init', function () {
-			// get current language for wpml support (if available)
+			// Double check if is admin area
+			if (!is_admin()) {
+				return;
+			}
+
+			// Get current language for wpml support (if available)
 			$current_lang = apply_filters('wpml_current_language', false);
 			$active_languages = apply_filters('wpml_active_languages', [], 'orderby=id&order=desc');
 
-			// register settings sections
+			// Register settings sections
 			foreach ($this->settings_sections as $section) {
-				if (false == get_option($section['id'])) {
-					add_option($section['id']);
-				}
-
 				if (isset($section['desc']) && !empty($section['desc'])) {
 					$section['desc'] = '<div class="inside">'.$section['desc'].'</div>';
 					$callback = function () use ($section) {
@@ -128,7 +164,7 @@ class SettingsAPI
 				add_settings_section($section['id'], $section['title'], $callback, $section['id']);
 			}
 
-			// register settings fields
+			// Register settings fields
 			foreach ($this->settings_fields as $section => $field) {
 				foreach ($field as $option) {
 					$name = $option['name'];
@@ -136,10 +172,26 @@ class SettingsAPI
 					$label = isset($option['label']) ? $option['label'] : '';
 					$callback = isset($option['callback']) ? $option['callback'] : [$this, 'callback_'.$type];
 
+					// Check if multilingual and overwrite name and labels
 					$multilang = false;
-					if (isset($option['multilang'])) {
+					if (isset($option['multilang']) && true === $option['multilang']) {
 						$multilang = $option['multilang'];
+
+						$original_name = $name;
+						$original_label = $label;
+
+						$name = $name.'_'.$current_lang;
+						$label = $label.' - '.strtoupper($current_lang).'';
 					}
+
+					// Add asterisk if required
+					if (isset($option['required']) && true === $option['required']) {
+						$label .= ' <span class="required">*</span>';
+					}
+
+					// Store possible field options and make them extendable
+					$field_options = isset($option['options']) ? $option['options'] : '';
+					$field_options = apply_filters('wk_options_api_field_options', $field_options, $option);
 
 					$args = [
 						'id' => $name,
@@ -149,45 +201,59 @@ class SettingsAPI
 						'name' => $label,
 						'section' => $section,
 						'size' => isset($option['size']) ? $option['size'] : null,
-						'options' => isset($option['options']) ? $option['options'] : '',
+						'options' => $field_options,
 						'std' => isset($option['default']) ? $option['default'] : '',
 						'sanitize_callback' => isset($option['sanitize_callback']) ? $option['sanitize_callback'] : '',
 						'type' => $type,
 						'placeholder' => isset($option['placeholder']) ? $option['placeholder'] : '',
+						'required' => isset($option['required']) ? $option['required'] : false,
 						'min' => isset($option['min']) ? $option['min'] : '',
 						'max' => isset($option['max']) ? $option['max'] : '',
 						'step' => isset($option['step']) ? $option['step'] : '',
 						'show_on' => isset($option['show_on']) ? $option['show_on'] : [],
-						'mulitlang' => $multilang,
+						'disabled_on' => isset($option['disabled_on']) ? $option['disabled_on'] : [],
+						'multilang' => $multilang,
 					];
 
-					if (true === $multilang) {
-						$args['field_lang'] = $current_lang;
-					}
-
-					// if field is multilang we have to render hidden fields of other translations
-					if (false !== $current_lang && isset($option['mulitlang']) && true === $option['mulitlang']) {
+					// If field is multilang we have to render hidden fields of other translations
+					if (false !== $current_lang && isset($option['multilang']) && true === $option['multilang']) {
 						if (!empty($active_languages)) {
+							// Add original field first before we alter the args
+							add_settings_field("{$section}[{$name}]", $label, $callback, $section, $section, $args);
+
 							foreach ($active_languages as $lang) {
 								if ($lang['code'] !== $current_lang) {
-									$overwrite_args = $args;
-									$overwrite_args['class'] .= ' wpml-hidden';
-									$overwrite_args['field_lang'] = $lang['code'];
+									$name = $original_name.'_'.$lang['code'];
+									$label = $original_label.' - '.strtoupper($lang['code']).'';
 
-									add_settings_field("{$section}[{$name}][{$lang['code']}]", $label, $callback, $section, $section, $overwrite_args);
+									// If page select field we have to change type to text to store the value, otherwise we won't have the options and it gets deleted
+									if ('pages' === $type) {
+										$type = 'text';
+										$callback = [$this, 'callback_text'];
+										$args['type'] = $type;
+										unset($args['options'], $args['required']);
+									}
+
+									// Overwrite the arguments for the hidden translation fields
+									$overwrite_args = $args;
+									$overwrite_args['id'] = $name;
+									$overwrite_args['name'] = $label;
+									$overwrite_args['label_for'] = "{$section}[{$name}]";
+									$overwrite_args['class'] = isset($option['class']) ? $option['class'] : $name;
+									$overwrite_args['class'] .= ' wpml-hidden';
+
+									add_settings_field("{$section}[{$name}}]", $label, $callback, $section, $section, $overwrite_args);
 								}
 							}
 						}
-
-						add_settings_field("{$section}[{$name}][{$current_lang}]", $label, $callback, $section, $section, $args);
 					} else {
-						// non multilang procedure
+						// Non multilang procedure
 						add_settings_field("{$section}[{$name}]", $label, $callback, $section, $section, $args);
 					}
 				}
 			}
 
-			// creates our settings in the options table
+			// Creates our settings in the options table
 			foreach ($this->settings_sections as $section) {
 				register_setting($section['id'], $section['id'], [$this, 'sanitize_options']);
 			}
@@ -207,7 +273,7 @@ class SettingsAPI
 			$desc = '';
 		}
 
-		return $desc;
+		return apply_filters('wk_options_api_field_description', $desc, $args);
 	}
 
 	/**
@@ -221,8 +287,10 @@ class SettingsAPI
 		$size = isset($args['size']) && !is_null($args['size']) ? $args['size'] : 'regular';
 		$type = isset($args['type']) ? $args['type'] : 'text';
 		$placeholder = empty($args['placeholder']) ? '' : ' placeholder="'.$args['placeholder'].'"';
+		$required = false === $args['required'] ? '' : ' required="required"';
+		$required_class = '' !== $required ? ' is-required' : '';
 
-		$html = sprintf('<input type="%1$s" class="%2$s-text" id="%3$s[%4$s]" name="%3$s[%4$s]" value="%5$s"%6$s/>', $type, $size, $args['section'], $args['id'], $value, $placeholder);
+		$html = sprintf('<input type="%1$s" class="%2$s-text%8$s" id="%3$s[%4$s]" name="%3$s[%4$s]" value="%5$s"%6$s%7$s/>', $type, $size, $args['section'], $args['id'], $value, $placeholder, $required, $required_class);
 		$html .= $this->get_field_description($args);
 
 		echo $this->handle_conditions($html, $args);
@@ -252,8 +320,10 @@ class SettingsAPI
 		$min = ('' == $args['min']) ? '' : ' min="'.$args['min'].'"';
 		$max = ('' == $args['max']) ? '' : ' max="'.$args['max'].'"';
 		$step = ('' == $args['step']) ? '' : ' step="'.$args['step'].'"';
+		$required = false === $args['required'] ? '' : ' required="required"';
+		$required_class = '' !== $required ? ' is-required' : '';
 
-		$html = sprintf('<input type="%1$s" class="%2$s-number" id="%3$s[%4$s]" name="%3$s[%4$s]" value="%5$s"%6$s%7$s%8$s%9$s/>', $type, $size, $args['section'], $args['id'], $value, $placeholder, $min, $max, $step);
+		$html = sprintf('<input type="%1$s" class="%2$s-number%11$s" id="%3$s[%4$s]" name="%3$s[%4$s]" value="%5$s"%6$s%7$s%8$s%9$s%10$s/>', $type, $size, $args['section'], $args['id'], $value, $placeholder, $min, $max, $step, $required, $required_class);
 		$html .= $this->get_field_description($args);
 
 		echo $this->handle_conditions($html, $args);
@@ -312,13 +382,11 @@ class SettingsAPI
 		$value = $this->get_option($args['id'], $args['section'], $args['std']);
 
 		$html = '<fieldset>';
-
 		foreach ($args['options'] as $key => $label) {
 			$html .= sprintf('<label for="wpuf-%1$s[%2$s][%3$s]">', $args['section'], $args['id'], $key);
 			$html .= sprintf('<input type="radio" class="radio" id="wpuf-%1$s[%2$s][%3$s]" name="%1$s[%2$s]" value="%3$s" %4$s />', $args['section'], $args['id'], $key, checked($value, $key, false));
 			$html .= sprintf('%1$s</label><br>', $label);
 		}
-
 		$html .= $this->get_field_description($args);
 		$html .= '</fieldset>';
 
@@ -334,8 +402,10 @@ class SettingsAPI
 	{
 		$value = esc_attr($this->get_option($args['id'], $args['section'], $args['std']));
 		$size = isset($args['size']) && !is_null($args['size']) ? $args['size'] : 'regular';
+		$required = false === $args['required'] ? '' : ' required="required"';
+		$required_class = '' !== $required ? ' is-required' : '';
 
-		$html = sprintf('<select class="%1$s" name="%2$s[%3$s]" id="%2$s[%3$s]">', $size, $args['section'], $args['id']);
+		$html = sprintf('<select class="%1$s%5$s" name="%2$s[%3$s]" id="%2$s[%3$s]"%4$s>', $size, $args['section'], $args['id'], $required, $required_class);
 
 		foreach ($args['options'] as $key => $label) {
 			$html .= sprintf('<option value="%s"%s>%s</option>', $key, selected($value, $key, false), $label);
@@ -357,8 +427,10 @@ class SettingsAPI
 		$value = esc_textarea($this->get_option($args['id'], $args['section'], $args['std']));
 		$size = isset($args['size']) && !is_null($args['size']) ? $args['size'] : 'regular';
 		$placeholder = empty($args['placeholder']) ? '' : ' placeholder="'.$args['placeholder'].'"';
+		$required = false === $args['required'] ? '' : ' required="required"';
+		$required_class = '' !== $required ? ' is-required' : '';
 
-		$html = sprintf('<textarea rows="5" cols="55" class="%1$s-text" id="%2$s[%3$s]" name="%2$s[%3$s]"%4$s>%5$s</textarea>', $size, $args['section'], $args['id'], $placeholder, $value);
+		$html = sprintf('<textarea rows="5" cols="55" class="%1$s-text%7$s" id="%2$s[%3$s]" name="%2$s[%3$s]"%4$s%6$s>%5$s</textarea>', $size, $args['section'], $args['id'], $placeholder, $value, $required, $required_class);
 		$html .= $this->get_field_description($args);
 
 		echo $this->handle_conditions($html, $args);
@@ -420,8 +492,10 @@ class SettingsAPI
 		$value = esc_attr($this->get_option($args['id'], $args['section'], $args['std']));
 		$size = isset($args['size']) && !is_null($args['size']) ? $args['size'] : 'regular';
 		$label = isset($args['options']['button_label']) ? $args['options']['button_label'] : __('Choose File');
+		$required = false === $args['required'] ? '' : ' required="required"';
+		$required_class = '' !== $required ? ' is-required' : '';
 
-		$html = sprintf('<input type="text" class="%1$s-text wk-options-file-url" id="%2$s[%3$s]" name="%2$s[%3$s]" value="%4$s"/>', $size, $args['section'], $args['id'], $value);
+		$html = sprintf('<input type="text" class="%1$s-text wk-options-file-url%6$s" id="%2$s[%3$s]" name="%2$s[%3$s]" value="%4$s"%5$s/>', $size, $args['section'], $args['id'], $value, $required, $required_class);
 		$html .= '<input type="button" class="button wk-options-file-browse" value="'.$label.'" />';
 		$html .= $this->get_field_description($args);
 
@@ -437,8 +511,10 @@ class SettingsAPI
 	{
 		$value = esc_attr($this->get_option($args['id'], $args['section'], $args['std']));
 		$size = isset($args['size']) && !is_null($args['size']) ? $args['size'] : 'regular';
+		$required = false === $args['required'] ? '' : ' required="required"';
+		$required_class = '' !== $required ? ' is-required' : '';
 
-		$html = sprintf('<input type="password" class="%1$s-text" id="%2$s[%3$s]" name="%2$s[%3$s]" value="%4$s"/>', $size, $args['section'], $args['id'], $value);
+		$html = sprintf('<input type="password" class="%1$s-text%6$s" id="%2$s[%3$s]" name="%2$s[%3$s]" value="%4$s"%5$s/>', $size, $args['section'], $args['id'], $value, $required, $required_class);
 		$html .= $this->get_field_description($args);
 
 		echo $this->handle_conditions($html, $args);
@@ -453,8 +529,10 @@ class SettingsAPI
 	{
 		$value = esc_attr($this->get_option($args['id'], $args['section'], $args['std']));
 		$size = isset($args['size']) && !is_null($args['size']) ? $args['size'] : 'regular';
+		$required = false === $args['required'] ? '' : ' required="required"';
+		$required_class = '' !== $required ? ' is-required' : '';
 
-		$html = sprintf('<input type="text" class="%1$s-text wp-color-picker-field" id="%2$s[%3$s]" name="%2$s[%3$s]" value="%4$s" data-default-color="%5$s" />', $size, $args['section'], $args['id'], $value, $args['std']);
+		$html = sprintf('<input type="text" class="%1$s-text wp-color-picker-field%7$s" id="%2$s[%3$s]" name="%2$s[%3$s]" value="%4$s" data-default-color="%5$s"%6$s/>', $size, $args['section'], $args['id'], $value, $args['std'], $required, $required_class);
 		$html .= $this->get_field_description($args);
 
 		echo $this->handle_conditions($html, $args);
@@ -467,11 +545,15 @@ class SettingsAPI
 	 */
 	public function callback_pages($args)
 	{
+		$required_class = true === $args['required'] ? 'is-required' : '';
+
 		$dropdown_args = [
 			'selected' => esc_attr($this->get_option($args['id'], $args['section'], $args['std'])),
 			'name' => $args['section'].'['.$args['id'].']',
 			'id' => $args['section'].'['.$args['id'].']',
+			'class' => $required_class,
 			'echo' => 0,
+			'required' => true === $args['required'] ? true : false,
 		];
 
 		$html = wp_dropdown_pages($dropdown_args);
@@ -480,7 +562,7 @@ class SettingsAPI
 	}
 
 	/**
-	 * Adds data attribute so we can conditionally show and hide fields.
+	 * Adds data attribute so we can conditionally show/hide or disable/undisable fields.
 	 *
 	 * @param string $html
 	 * @param array  $args
@@ -500,8 +582,29 @@ class SettingsAPI
 			}
 		}
 
+		$disabled_on_attributes = '';
+		if (!empty($args['disabled_on'])) {
+			foreach ($args['disabled_on'] as $disabled_on) {
+				if ('' != $disabled_on_attributes) {
+					$disabled_on_attributes .= '|';
+				}
+
+				$disabled_on_attributes .= '['.$disabled_on['key'].']:'.$disabled_on['compare'].':'.$disabled_on['value'];
+			}
+		}
+
+		$data_attributes = '';
+
 		if ('' !== $show_on_attributes) {
-			$html = '<div data-wk-show-on="'.$show_on_attributes.'">'.$html.'</div>';
+			$data_attributes = ' data-wk-show-on="'.$show_on_attributes.'"';
+		}
+
+		if ('' !== $disabled_on_attributes) {
+			$data_attributes = ' data-wk-disabled-on="'.$disabled_on_attributes.'"';
+		}
+
+		if ('' !== $data_attributes) {
+			$html = '<div'.$data_attributes.'>'.$html.'</div>';
 		}
 
 		return $html;
@@ -565,6 +668,24 @@ class SettingsAPI
 	}
 
 	/**
+	 * Set the options property.
+	 *
+	 * @param string $section
+	 */
+	public function set_options($section)
+	{
+		if (null === $this->options) {
+			$this->options = [];
+		}
+
+		if (!isset($this->options[$section])) {
+			$this->options[$section] = get_option($section);
+			$this->options[$section] = $this->add_current_language_option_value_as_default_option_value($section, $this->options[$section]);
+			$this->options[$section] = apply_filters('wk_options_api_filter_options', $this->options[$section], $section);
+		}
+	}
+
+	/**
 	 * Get the value of a settings field.
 	 *
 	 * @param string $option  settings field name
@@ -575,13 +696,67 @@ class SettingsAPI
 	 */
 	public function get_option($option, $section, $default = '')
 	{
-		$options = get_option($section);
+		$this->set_options($section);
 
-		if (isset($options[$option])) {
-			return $options[$option];
+		if (isset($this->options[$section][$option])) {
+			return $this->options[$section][$option];
 		}
 
 		return $default;
+	}
+
+	/**
+	 * Get all options of a section properly with all handlings.
+	 *
+	 * @param string $section the section name this field belongs to
+	 *
+	 * @return string
+	 */
+	public function get_options($section)
+	{
+		$this->set_options($section);
+
+		if (isset($this->options[$section])) {
+			return $this->options[$section];
+		}
+
+		return false;
+	}
+
+	/**
+	 * Add current language value for multilingual fields.
+	 *
+	 * @param string $section
+	 * @param array  $options
+	 *
+	 * @return array
+	 */
+	public function add_current_language_option_value_as_default_option_value($section, $options)
+	{
+		// Check if the section has options
+		if (empty($options)) {
+			return $options;
+		}
+
+		// Check if current language can be accessed with WPML
+		$current_language = apply_filters('wpml_current_language', false);
+		if (false === $current_language) {
+			return $options;
+		}
+
+		// Check if the section has translatable fields
+		if (!isset($this->multilingual_settings_fields[$section])) {
+			return $options;
+		}
+
+		// Add the option value without language key so we can access it as current language value
+		foreach ($this->multilingual_settings_fields[$section] as $translatable_field_key) {
+			if (isset($options[$translatable_field_key.'_'.$current_language])) {
+				$options[$translatable_field_key] = $options[$translatable_field_key.'_'.$current_language];
+			}
+		}
+
+		return $options;
 	}
 
 	/**
@@ -595,7 +770,7 @@ class SettingsAPI
 
 		$count = count($this->settings_sections);
 
-		// don't show the navigation if only one section exists
+		// Don't show the navigation if only one section exists
 		if (1 === $count) {
 			return;
 		}
@@ -640,7 +815,7 @@ class SettingsAPI
 </div>
 <?php
 		$this->script();
-		$this->styles();
+		$this->style();
 	}
 
 	/**
@@ -648,14 +823,14 @@ class SettingsAPI
 	 */
 	public function script()
 	{
-		echo '<script id="wk-options-api-styles">'.file_get_contents(WK_OPTIONS_API_DIR.'/assets/admin/main.js').'</script>';
+		echo '<script id="wk-options-api-script">'.file_get_contents(WK_OPTIONS_API_DIR.'/assets/admin/main.js').'</script>';
 	}
 
 	/**
 	 * Render styles for the options page.
 	 */
-	public function styles()
+	public function style()
 	{
-		echo '<style type="text/css" id="wk-options-api-styles">'.file_get_contents(WK_OPTIONS_API_DIR.'/assets/admin/main.css').'</style>';
+		echo '<style type="text/css" id="wk-options-api-style">'.file_get_contents(WK_OPTIONS_API_DIR.'/assets/admin/main.css').'</style>';
 	}
 }

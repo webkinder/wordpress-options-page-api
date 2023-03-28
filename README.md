@@ -84,13 +84,14 @@ Changelog:
 
 ----------------------
 ```
-v2.0 (28 March, 2023)
+2.0.0 (28 March, 2023)
 ------------------------
 - Add proper versioning
-- Add conditional support
-- Add multilang support
+- Add conditional support for hiding and disabling fields
+- Add option for required fields
+- Add multilang support (WPML only)
 
-v1.0 (14 March, 2019)
+1.0.0 (14 March, 2019)
 ------------------------
 - First version published
 ```
