@@ -622,10 +622,10 @@ class SettingsAPI
 	<div id="<?php echo $form['id']; ?>" class="group" style="display: none;">
 		<form method="post" action="options.php">
 			<?php
-		do_action('wsa_form_top_'.$form['id'], $form);
+		do_action('wk_options_form_top_'.$form['id'], $form);
 		settings_fields($form['id']);
 		do_settings_sections($form['id']);
-		do_action('wsa_form_bottom_'.$form['id'], $form);
+		do_action('wk_options_form_bottom_'.$form['id'], $form);
 		if (isset($this->settings_fields[$form['id']])) {
 			?>
 			<?php do_action('do_before_submit_button', $form); ?>
