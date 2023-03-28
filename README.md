@@ -10,7 +10,7 @@ To install this package, edit your `composer.json` file:
 ```js
 {
     "require": {
-        "webkinder/wordpress-options-page-api": "1.0.0"
+        "webkinder/wordpress-options-page-api": "2.0.0"
     }
 }
 ```
@@ -84,7 +84,14 @@ Changelog:
 
 ----------------------
 ```
-v1.0 (14 March, 2019)
+2.0.0 (28 March, 2023)
+------------------------
+- Add proper versioning
+- Add conditional support for hiding and disabling fields
+- Add option for required fields
+- Add multilang support (WPML only)
+
+1.0.0 (14 March, 2019)
 ------------------------
 - First version published
 ```
