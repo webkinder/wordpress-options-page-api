@@ -84,6 +84,10 @@ Changelog:
 
 ----------------------
 ```
+2.0.1 (29 March, 2023)
+------------------------
+- Fix hidden translation fields that were required and could be empty
+
 2.0.0 (28 March, 2023)
 ------------------------
 - Add proper versioning
