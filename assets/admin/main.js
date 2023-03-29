@@ -124,6 +124,15 @@ jQuery(document).ready(function($) {
 				el.removeAttribute('required');
 			});
 		}
+
+		// To be sure we don't have any hidden required fields
+		const hiddenByWPML = document.querySelectorAll('.wpml-hidden .is-required');
+		
+		if(hiddenByWPML.length) {
+			hiddenByWPML.forEach(el => {
+				el.removeAttribute('required');
+			});
+		}
 	};
 
 	// Handle show_on mechanism
