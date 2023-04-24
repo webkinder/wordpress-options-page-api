@@ -118,7 +118,7 @@ class SettingsAPI
 		if (!empty($this->settings_fields)) {
 			foreach ($this->settings_fields as $section_key => $section) {
 				foreach ($section as $field) {
-					if (isset($field['multilang']) && true === $field['multilang']) {
+					if (isset($field['multilang']) && true === $field['multilang'] && function_exists('icl_object_id')) {
 						$this->multilingual_settings_fields[$section_key][$field['name']] = $field['name'];
 					}
 				}
@@ -174,7 +174,7 @@ class SettingsAPI
 
 					// Check if multilingual and overwrite name and labels
 					$multilang = false;
-					if (isset($option['multilang']) && true === $option['multilang']) {
+					if (isset($option['multilang']) && true === $option['multilang'] && false !== $current_lang) {
 						$multilang = $option['multilang'];
 
 						$original_name = $name;

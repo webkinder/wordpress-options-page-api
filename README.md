@@ -84,6 +84,10 @@ Changelog:
 
 ----------------------
 ```
+2.0.2 (24 April, 2023)
+------------------------
+- Better check for multilang
+
 2.0.1 (29 March, 2023)
 ------------------------
 - Fix hidden translation fields that were required and could be empty
