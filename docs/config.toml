@@ -1,8 +1,0 @@
-baseURL = "https://webkinder.github.io/wordpress-options-page-api/"
-languageCode = "en-us"
-title = "WebKinder WordPress Settings API"
-theme = "kube"
-[[menu.main]]
-    name = "Docs"
-    weight = -100
-    url = "/docs/"
