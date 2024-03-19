@@ -10,7 +10,7 @@ To install this package, edit your `composer.json` file:
 ```js
 {
     "require": {
-        "webkinder/wordpress-options-page-api": "2.0.0"
+        "webkinder/wordpress-options-page-api": "2.1.1"
     }
 }
 ```
@@ -19,12 +19,62 @@ Now run:
 
 `$ composer install`
 
-Usage Example
----------------
+## Usage Example
 
-Checkout the [examples](https://github.com/tareq1988/wordpress-settings-api-class/tree/master/example) folder for OOP and procedural example.
+### Registering options
+```php
+use WebKinder\SettingsAPI;
 
-#### Retrieving saved options
+(new SettingsAPI(['network_settings' => false]))
+	->set_sections(
+		[
+			[
+				'id' => 'custom_options',
+				'title' => __('Custom Options'),
+			],
+		]
+	)
+	->set_fields([
+		'custom_options' => [
+			[
+				'name' => 'information_text',
+				'label' => __('Information Text'),
+				'type' => 'textarea',
+			],
+			[
+				'name' => 'radio_option',
+				'label' => __('Radio Option'),
+				'type' => 'radio',
+				'options' => [
+					'top' => __('Top'),
+					'bottom' => __('Bottom'),
+					'bottom-right' => __('Bottom Right'),
+				],
+			],
+			[
+				'name' => 'checkbox_option',
+				'label' => __('Checkbox Option'),
+				'type' => 'checkbox',
+				'desc' => __('aktivieren'),
+			],
+			[
+				'name' => 'multicheck_option',
+				'label' => __('Multicheck Options'),
+				'type' => 'multicheck',
+				'options' => [
+					'top' => __('Top'),
+					'bottom' => __('Bottom'),
+					'bottom-right' => __('Bottom Right'),
+				],
+			],
+		],
+	])
+	->register_page('Options page', 'Options page', 'manage_options', 'custom-options-page')
+	->admin_init()
+;
+
+```
+### Retrieving saved options
 
 ```php
 /**
@@ -48,32 +98,7 @@ function prefix_get_option( $option, $section, $default = '' ) {
 }
 ```
 
-## Documentation
-
-Documentation can be found at [https://webkinder.github.io/wordpress-options-page-api/](https://webkinder.github.io/wordpress-options-page-api/)
-
-Screenshot
-----------------------
-
-![Option Panel](https://github.com/webkinder/wordpress-options-page-api/raw/master/screenshot-1.png "The options panel build on the fly using the PHP Class")
-
-## Actions
-
-Action to add code before submit button: do_before_submit_button
-Action to add code after submit button: do_after_submit_button
-
-
-## Contributing
-
-Contributions are welcome. Send us your PR's.
-
-## Generate the docs
-`cd docs && bash generate-docs.sh -d . && cd -`
-
-Frequently Asked Questions
----------------
-
-#### What this plugin for?
+## What this plugin for?
 
 This is an API for the WordPress Settings API
 
@@ -84,6 +109,11 @@ Changelog:
 
 ----------------------
 ```
+2.1.1 (19 March, 2024)
+------------------------
+- Update docs
+- More dynamic handling
+
 2.1.0 (19 March, 2024)
 ------------------------
 - Add support for network options
