@@ -15,6 +15,11 @@ if (class_exists('\WebKinder\SettingsAPI')) {
 class SettingsAPI
 {
 	/**
+	 * Stored class settings.
+	 */
+	public $class_settings;
+
+	/**
 	 * Stored options data.
 	 */
 	public $options;
@@ -42,9 +47,26 @@ class SettingsAPI
 
 	/**
 	 * Load scripts needed in admin panel on init of class.
+	 *
+	 * @param mixed $class_settings
 	 */
-	public function __construct()
+	public function __construct($class_settings)
 	{
+		$this->class_settings = $class_settings;
+
+		// Check if we need network site handling
+		if (!isset($this->class_settings['multisite'])) {
+			$this->class_settings['multisite'] = is_multisite();
+		} else {
+			if (!is_multisite()) {
+				$this->class_settings['multisite'] = false;
+			}
+		}
+
+		if ($this->class_settings['multisite']) {
+			add_action('network_admin_edit_wk_update_consent', [$this, 'saveMultisiteOptions']);
+		}
+
 		add_action('admin_enqueue_scripts', [$this, 'admin_enqueue_scripts']);
 	}
 
@@ -58,14 +80,25 @@ class SettingsAPI
 	 */
 	public function register_page($page_title, $menu_title, $capability, $menu_slug)
 	{
-		add_action('admin_menu', function () use ($page_title, $menu_title, $capability, $menu_slug) {
-			add_options_page($page_title, $menu_title, $capability, $menu_slug, function () {
-				echo '<div class="wrap">';
-				$this->show_navigation();
-				$this->show_forms();
-				echo '</div>';
+		if ($this->class_settings['multisite']) {
+			add_action('network_admin_menu', function () use ($page_title, $menu_title, $capability, $menu_slug) {
+				add_submenu_page('settings.php', $page_title, $menu_title, $capability, $menu_slug, function () {
+					echo '<div class="wrap">';
+					$this->show_navigation();
+					$this->show_forms();
+					echo '</div>';
+				});
 			});
-		});
+		} else {
+			add_action('admin_menu', function () use ($page_title, $menu_title, $capability, $menu_slug) {
+				add_options_page($page_title, $menu_title, $capability, $menu_slug, function () {
+					echo '<div class="wrap">';
+					$this->show_navigation();
+					$this->show_forms();
+					echo '</div>';
+				});
+			});
+		}
 
 		return $this;
 	}
@@ -679,7 +712,11 @@ class SettingsAPI
 		}
 
 		if (!isset($this->options[$section])) {
-			$this->options[$section] = get_option($section);
+			if ($this->class_settings['multisite']) {
+				$this->options[$section] = get_site_option($section);
+			} else {
+				$this->options[$section] = get_option($section);
+			}
 			$this->options[$section] = $this->add_current_language_option_value_as_default_option_value($section, $this->options[$section]);
 			$this->options[$section] = apply_filters('wk_options_api_filter_options', $this->options[$section], $section);
 		}
@@ -760,6 +797,35 @@ class SettingsAPI
 	}
 
 	/**
+	 * Save multisite options.
+	 */
+	public function saveMultisiteOptions()
+	{
+		// Verify nonce
+		if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'wk_consent_basic_options-options')) {
+			wp_nonce_ays('wk_consent_basic_options-options');
+		}
+
+		// Save options
+		if (isset($_POST['wk_consent_basic_options'])) {
+			update_site_option('wk_consent_basic_options', $_POST['wk_consent_basic_options']);
+		}
+
+		// Redirect back top options page
+		wp_safe_redirect(
+			add_query_arg(
+				[
+					'page' => 'wk-cookie-consent',
+					'updated' => true,
+				],
+				network_admin_url('settings.php')
+			)
+		);
+
+		exit;
+	}
+
+	/**
 	 * Show navigations as tab.
 	 *
 	 * Shows all the settings section labels as tab
@@ -795,7 +861,7 @@ class SettingsAPI
 <div class="metabox-holder">
 	<?php foreach ($this->settings_sections as $form) { ?>
 	<div id="<?php echo $form['id']; ?>" class="group" style="display: none;">
-		<form method="post" action="options.php">
+		<form method="post" action="<?php echo ($this->class_settings['multisite']) ? add_query_arg('action', 'wk_update_consent', 'edit.php') : 'options.php'; ?>">
 			<?php
 		do_action('wk_options_form_top_'.$form['id'], $form);
 		settings_fields($form['id']);

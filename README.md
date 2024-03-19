@@ -84,6 +84,10 @@ Changelog:
 
 ----------------------
 ```
+2.1.0 (19 March, 2024)
+------------------------
+- Add support for network options
+
 2.0.2 (24 April, 2023)
 ------------------------
 - Better check for multilang
