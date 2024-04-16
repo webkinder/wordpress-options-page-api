@@ -109,6 +109,10 @@ Changelog:
 
 ----------------------
 ```
+2.1.2 (16 April, 2024)
+------------------------
+- Hotfix: Improve backwards compatibility
+
 2.1.1 (19 March, 2024)
 ------------------------
 - Update docs

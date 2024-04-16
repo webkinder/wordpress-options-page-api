@@ -50,7 +50,7 @@ class SettingsAPI
 	 *
 	 * @param mixed $class_settings
 	 */
-	public function __construct($class_settings)
+	public function __construct($class_settings = [])
 	{
 		$this->class_settings = $class_settings;
 
