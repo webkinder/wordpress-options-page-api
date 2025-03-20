@@ -127,10 +127,10 @@ class SettingsAPI
 	public function set_section_actions($sections)
 	{
 		foreach ($sections as $section) {
-			add_action('network_admin_edit_'.$section['id'], function () use ($section) {
+			add_action('network_admin_edit_' . $section['id'], function () use ($section) {
 				// Verify nonce
-				if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], $section['id'].'-options')) {
-					wp_nonce_ays($section['id'].'-options');
+				if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], $section['id'] . '-options')) {
+					wp_nonce_ays($section['id'] . '-options');
 				}
 
 				// Save options
@@ -213,7 +213,7 @@ class SettingsAPI
 			// Register settings sections
 			foreach ($this->settings_sections as $section) {
 				if (isset($section['desc']) && !empty($section['desc'])) {
-					$section['desc'] = '<div class="inside">'.$section['desc'].'</div>';
+					$section['desc'] = '<div class="inside">' . $section['desc'] . '</div>';
 					$callback = function () use ($section) {
 						echo str_replace('"', '\"', $section['desc']);
 					};
@@ -232,7 +232,7 @@ class SettingsAPI
 					$name = $option['name'];
 					$type = isset($option['type']) ? $option['type'] : 'text';
 					$label = isset($option['label']) ? $option['label'] : '';
-					$callback = isset($option['callback']) ? $option['callback'] : [$this, 'callback_'.$type];
+					$callback = isset($option['callback']) ? $option['callback'] : [$this, 'callback_' . $type];
 
 					// Check if multilingual and overwrite name and labels
 					$multilang = false;
@@ -242,8 +242,8 @@ class SettingsAPI
 						$original_name = $name;
 						$original_label = $label;
 
-						$name = $name.'_'.$current_lang;
-						$label = $label.' - '.strtoupper($current_lang).'';
+						$name = $name . '_' . $current_lang;
+						$label = $label . ' - ' . strtoupper($current_lang) . '';
 					}
 
 					// Add asterisk if required
@@ -285,8 +285,8 @@ class SettingsAPI
 
 							foreach ($active_languages as $lang) {
 								if ($lang['code'] !== $current_lang) {
-									$name = $original_name.'_'.$lang['code'];
-									$label = $original_label.' - '.strtoupper($lang['code']).'';
+									$name = $original_name . '_' . $lang['code'];
+									$label = $original_label . ' - ' . strtoupper($lang['code']) . '';
 
 									// If page select field we have to change type to text to store the value, otherwise we won't have the options and it gets deleted
 									if ('pages' === $type) {
@@ -348,7 +348,7 @@ class SettingsAPI
 		$value = esc_attr($this->get_option($args['id'], $args['section'], $args['std']));
 		$size = isset($args['size']) && !is_null($args['size']) ? $args['size'] : 'regular';
 		$type = isset($args['type']) ? $args['type'] : 'text';
-		$placeholder = empty($args['placeholder']) ? '' : ' placeholder="'.$args['placeholder'].'"';
+		$placeholder = empty($args['placeholder']) ? '' : ' placeholder="' . $args['placeholder'] . '"';
 		$required = false === $args['required'] ? '' : ' required="required"';
 		$required_class = '' !== $required ? ' is-required' : '';
 
@@ -378,10 +378,10 @@ class SettingsAPI
 		$value = esc_attr($this->get_option($args['id'], $args['section'], $args['std']));
 		$size = isset($args['size']) && !is_null($args['size']) ? $args['size'] : 'regular';
 		$type = isset($args['type']) ? $args['type'] : 'number';
-		$placeholder = empty($args['placeholder']) ? '' : ' placeholder="'.$args['placeholder'].'"';
-		$min = ('' == $args['min']) ? '' : ' min="'.$args['min'].'"';
-		$max = ('' == $args['max']) ? '' : ' max="'.$args['max'].'"';
-		$step = ('' == $args['step']) ? '' : ' step="'.$args['step'].'"';
+		$placeholder = empty($args['placeholder']) ? '' : ' placeholder="' . $args['placeholder'] . '"';
+		$min = ('' == $args['min']) ? '' : ' min="' . $args['min'] . '"';
+		$max = ('' == $args['max']) ? '' : ' max="' . $args['max'] . '"';
+		$step = ('' == $args['step']) ? '' : ' step="' . $args['step'] . '"';
 		$required = false === $args['required'] ? '' : ' required="required"';
 		$required_class = '' !== $required ? ' is-required' : '';
 
@@ -480,6 +480,42 @@ class SettingsAPI
 	}
 
 	/**
+	 * Displays a multi-select box for a settings field.
+	 *
+	 * @param array $args settings field args
+	 */
+	public function callback_multiselect(array $args): void
+	{
+		// Ensure the value is an array of strings
+		$value = (array) $this->get_option($args['id'], $args['section'], $args['std']);
+		$value = array_map('strval', array_filter($value, 'is_scalar'));
+		$size = isset($args['size']) && is_string($args['size']) ? $args['size'] : 'regular';
+		$required = isset($args['required']) && $args['required'] === true ? ' required="required"' : '';
+		$required_class = $required !== '' ? ' is-required' : '';
+
+		$html = sprintf(
+			'<select class="%1$s%5$s" name="%2$s[%3$s][]" id="%2$s[%3$s]" multiple="multiple"%4$s style="height: auto; width: 100%%;">',
+			$size,
+			$args['section'],
+			$args['id'],
+			$required,
+			$required_class
+		);
+
+		foreach ($args['options'] as $key => $label) {
+			// Ensure keys and labels are strings
+			$key = is_scalar($key) ? (string) $key : '';
+			$label = is_scalar($label) ? (string) $label : '';
+			$selected = in_array($key, $value, true) ? 'selected="selected"' : '';
+			$html .= sprintf('<option value="%s"%s>%s</option>', $key, $selected, $label);
+		}
+
+		$html .= '</select>';
+		$html .= $this->get_field_description($args);
+		echo $this->handle_conditions($html, $args);
+	}
+
+	/**
 	 * Displays a textarea for a settings field.
 	 *
 	 * @param array $args settings field args
@@ -488,7 +524,7 @@ class SettingsAPI
 	{
 		$value = esc_textarea($this->get_option($args['id'], $args['section'], $args['std']));
 		$size = isset($args['size']) && !is_null($args['size']) ? $args['size'] : 'regular';
-		$placeholder = empty($args['placeholder']) ? '' : ' placeholder="'.$args['placeholder'].'"';
+		$placeholder = empty($args['placeholder']) ? '' : ' placeholder="' . $args['placeholder'] . '"';
 		$required = false === $args['required'] ? '' : ' required="required"';
 		$required_class = '' !== $required ? ' is-required' : '';
 
@@ -520,11 +556,11 @@ class SettingsAPI
 		$value = $this->get_option($args['id'], $args['section'], $args['std']);
 		$size = isset($args['size']) && !is_null($args['size']) ? $args['size'] : '500px';
 
-		$html = '<div style="max-width: '.$size.';">';
+		$html = '<div style="max-width: ' . $size . ';">';
 
 		$editor_settings = [
 			'teeny' => true,
-			'textarea_name' => $args['section'].'['.$args['id'].']',
+			'textarea_name' => $args['section'] . '[' . $args['id'] . ']',
 			'textarea_rows' => 10,
 		];
 
@@ -534,7 +570,7 @@ class SettingsAPI
 
 		ob_start();
 
-		wp_editor($value, $args['section'].'-'.$args['id'], $editor_settings);
+		wp_editor($value, $args['section'] . '-' . $args['id'], $editor_settings);
 
 		$html .= ob_get_clean();
 		$html .= '</div>';
@@ -558,7 +594,7 @@ class SettingsAPI
 		$required_class = '' !== $required ? ' is-required' : '';
 
 		$html = sprintf('<input type="text" class="%1$s-text wk-options-file-url%6$s" id="%2$s[%3$s]" name="%2$s[%3$s]" value="%4$s"%5$s/>', $size, $args['section'], $args['id'], $value, $required, $required_class);
-		$html .= '<input type="button" class="button wk-options-file-browse" value="'.$label.'" />';
+		$html .= '<input type="button" class="button wk-options-file-browse" value="' . $label . '" />';
 		$html .= $this->get_field_description($args);
 
 		echo $this->handle_conditions($html, $args);
@@ -611,8 +647,8 @@ class SettingsAPI
 
 		$dropdown_args = [
 			'selected' => esc_attr($this->get_option($args['id'], $args['section'], $args['std'])),
-			'name' => $args['section'].'['.$args['id'].']',
-			'id' => $args['section'].'['.$args['id'].']',
+			'name' => $args['section'] . '[' . $args['id'] . ']',
+			'id' => $args['section'] . '[' . $args['id'] . ']',
 			'class' => $required_class,
 			'echo' => 0,
 			'required' => true === $args['required'] ? true : false,
@@ -640,7 +676,7 @@ class SettingsAPI
 					$show_on_attributes .= '|';
 				}
 
-				$show_on_attributes .= '['.$show_on['key'].']:'.$show_on['compare'].':'.$show_on['value'].':'.$show_on['only_desc'];
+				$show_on_attributes .= '[' . $show_on['key'] . ']:' . $show_on['compare'] . ':' . $show_on['value'] . ':' . $show_on['only_desc'];
 			}
 		}
 
@@ -651,22 +687,22 @@ class SettingsAPI
 					$disabled_on_attributes .= '|';
 				}
 
-				$disabled_on_attributes .= '['.$disabled_on['key'].']:'.$disabled_on['compare'].':'.$disabled_on['value'];
+				$disabled_on_attributes .= '[' . $disabled_on['key'] . ']:' . $disabled_on['compare'] . ':' . $disabled_on['value'];
 			}
 		}
 
 		$data_attributes = '';
 
 		if ('' !== $show_on_attributes) {
-			$data_attributes = ' data-wk-show-on="'.$show_on_attributes.'"';
+			$data_attributes = ' data-wk-show-on="' . $show_on_attributes . '"';
 		}
 
 		if ('' !== $disabled_on_attributes) {
-			$data_attributes = ' data-wk-disabled-on="'.$disabled_on_attributes.'"';
+			$data_attributes = ' data-wk-disabled-on="' . $disabled_on_attributes . '"';
 		}
 
 		if ('' !== $data_attributes) {
-			$html = '<div'.$data_attributes.'>'.$html.'</div>';
+			$html = '<div' . $data_attributes . '>' . $html . '</div>';
 		}
 
 		return $html;
@@ -817,8 +853,8 @@ class SettingsAPI
 
 		// Add the option value without language key so we can access it as current language value
 		foreach ($this->multilingual_settings_fields[$section] as $translatable_field_key) {
-			if (isset($options[$translatable_field_key.'_'.$current_language])) {
-				$options[$translatable_field_key] = $options[$translatable_field_key.'_'.$current_language];
+			if (isset($options[$translatable_field_key . '_' . $current_language])) {
+				$options[$translatable_field_key] = $options[$translatable_field_key . '_' . $current_language];
 			}
 		}
 
@@ -857,28 +893,28 @@ class SettingsAPI
 	 */
 	public function show_forms()
 	{
-		?>
-<div class="metabox-holder">
-	<?php foreach ($this->settings_sections as $form) { ?>
-	<div id="<?php echo $form['id']; ?>" class="group" style="display: none;">
-		<form method="post" action="<?php echo ($this->class_settings['network_settings']) ? add_query_arg('action', $form['id'], 'edit.php') : 'options.php'; ?>">
-			<?php
-			do_action('wk_options_form_top_'.$form['id'], $form);
-		settings_fields($form['id']);
-		do_settings_sections($form['id']);
-		do_action('wk_options_form_bottom_'.$form['id'], $form);
-		if (isset($this->settings_fields[$form['id']])) {
-			?>
-			<?php do_action('do_before_submit_button', $form); ?>
-			<div>
-				<?php submit_button(); ?>
-			</div>
-			<?php do_action('do_after_submit_button', $form); ?>
+?>
+		<div class="metabox-holder">
+			<?php foreach ($this->settings_sections as $form) { ?>
+				<div id="<?php echo $form['id']; ?>" class="group" style="display: none;">
+					<form method="post" action="<?php echo ($this->class_settings['network_settings']) ? add_query_arg('action', $form['id'], 'edit.php') : 'options.php'; ?>">
+						<?php
+						do_action('wk_options_form_top_' . $form['id'], $form);
+						settings_fields($form['id']);
+						do_settings_sections($form['id']);
+						do_action('wk_options_form_bottom_' . $form['id'], $form);
+						if (isset($this->settings_fields[$form['id']])) {
+						?>
+							<?php do_action('do_before_submit_button', $form); ?>
+							<div>
+								<?php submit_button(); ?>
+							</div>
+							<?php do_action('do_after_submit_button', $form); ?>
+						<?php } ?>
+					</form>
+				</div>
 			<?php } ?>
-		</form>
-	</div>
-	<?php } ?>
-</div>
+		</div>
 <?php
 		$this->script();
 		$this->style();
@@ -889,7 +925,7 @@ class SettingsAPI
 	 */
 	public function script()
 	{
-		echo '<script id="wk-options-api-script">'.file_get_contents(WK_OPTIONS_API_DIR.'/assets/admin/main.js').'</script>';
+		echo '<script id="wk-options-api-script">' . file_get_contents(WK_OPTIONS_API_DIR . '/assets/admin/main.js') . '</script>';
 	}
 
 	/**
@@ -897,6 +933,6 @@ class SettingsAPI
 	 */
 	public function style()
 	{
-		echo '<style type="text/css" id="wk-options-api-style">'.file_get_contents(WK_OPTIONS_API_DIR.'/assets/admin/main.css').'</style>';
+		echo '<style type="text/css" id="wk-options-api-style">' . file_get_contents(WK_OPTIONS_API_DIR . '/assets/admin/main.css') . '</style>';
 	}
 }
