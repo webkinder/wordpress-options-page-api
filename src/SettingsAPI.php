@@ -275,6 +275,7 @@ class SettingsAPI
 						'show_on' => isset($option['show_on']) ? $option['show_on'] : [],
 						'disabled_on' => isset($option['disabled_on']) ? $option['disabled_on'] : [],
 						'multilang' => $multilang,
+						'multiple' => isset($option['multiple']) ? $option['multiple'] : false,
 					];
 
 					// If field is multilang we have to render hidden fields of other translations
@@ -456,64 +457,50 @@ class SettingsAPI
 	}
 
 	/**
-	 * Displays a selectbox for a settings field.
+	 * Displays a select box for a settings field.
 	 *
 	 * @param array $args settings field args
 	 */
 	public function callback_select($args)
 	{
-		$value = esc_attr($this->get_option($args['id'], $args['section'], $args['std']));
+		$value = $this->get_option($args['id'], $args['section'], $args['std']);
+		$value = is_array($value) ? array_map('esc_attr', $value) : esc_attr($value);
 		$size = isset($args['size']) && !is_null($args['size']) ? $args['size'] : 'regular';
-		$required = false === $args['required'] ? '' : ' required="required"';
-		$required_class = '' !== $required ? ' is-required' : '';
-
-		$html = sprintf('<select class="%1$s%5$s" name="%2$s[%3$s]" id="%2$s[%3$s]"%4$s>', $size, $args['section'], $args['id'], $required, $required_class);
-
-		foreach ($args['options'] as $key => $label) {
-			$html .= sprintf('<option value="%s"%s>%s</option>', $key, selected($value, $key, false), $label);
-		}
-
-		$html .= sprintf('</select>');
-		$html .= $this->get_field_description($args);
-
-		echo $this->handle_conditions($html, $args);
-	}
-
-	/**
-	 * Displays a multi-select box for a settings field.
-	 *
-	 * @param array $args settings field args
-	 */
-	public function callback_multiselect(array $args): void
-	{
-		// Ensure the value is an array of strings
-		$value = (array) $this->get_option($args['id'], $args['section'], $args['std']);
-		$value = array_map('strval', array_filter($value, 'is_scalar'));
-		$size = isset($args['size']) && is_string($args['size']) ? $args['size'] : 'regular';
 		$required = isset($args['required']) && $args['required'] === true ? ' required="required"' : '';
-		$required_class = $required !== '' ? ' is-required' : '';
+		$required_class = !empty($required) ? ' is-required' : '';
+
+		// Check if multiple selection is enabled
+		$multiple = isset($args['multiple']) && $args['multiple'] === true ? ' multiple="multiple"' : '';
+		$name_suffix = !empty($multiple) ? '[]' : '';
 
 		$html = sprintf(
-			'<select class="%1$s%5$s" name="%2$s[%3$s][]" id="%2$s[%3$s]" multiple="multiple"%4$s style="height: auto; width: 100%%;">',
+			'<select class="%1$s%6$s" name="%2$s[%3$s]%7$s" id="%2$s[%3$s]"%4$s%5$s>',
 			$size,
 			$args['section'],
 			$args['id'],
 			$required,
-			$required_class
+			$multiple,
+			$required_class,
+			$name_suffix
 		);
 
 		foreach ($args['options'] as $key => $label) {
-			// Ensure keys and labels are strings
-			$key = is_scalar($key) ? (string) $key : '';
-			$label = is_scalar($label) ? (string) $label : '';
-			$selected = in_array($key, $value, true) ? 'selected="selected"' : '';
+			// Check if this option should be selected (handle single or multiple values)
+			$selected = (!empty($multiple) && is_array($value) && in_array((string)$key, $value, true)) ||
+				(empty($multiple) && (string)$value === (string)$key)
+				? ' selected="selected"'
+				: '';
+
+
 			$html .= sprintf('<option value="%s"%s>%s</option>', $key, $selected, $label);
 		}
 
 		$html .= '</select>';
 		$html .= $this->get_field_description($args);
+
 		echo $this->handle_conditions($html, $args);
 	}
+
 
 	/**
 	 * Displays a textarea for a settings field.
