@@ -1,5 +1,4 @@
-What is this?
----------------
+## What is this?
 
 It's a PHP class wrapper for handling WordPress [Settings API](http://codex.wordpress.org/Settings_API). This is an easily accessible OOP API for developers to use in their own plugins.
 
@@ -10,7 +9,7 @@ To install this package, edit your `composer.json` file:
 ```js
 {
     "require": {
-        "webkinder/wordpress-options-page-api": "2.1.1"
+        "webkinder/wordpress-options-page-api": "2.2.0"
     }
 }
 ```
@@ -22,6 +21,7 @@ Now run:
 ## Usage Example
 
 ### Registering options
+
 ```php
 use WebKinder\SettingsAPI;
 
@@ -74,6 +74,7 @@ use WebKinder\SettingsAPI;
 ;
 
 ```
+
 ### Retrieving saved options
 
 ```php
@@ -103,12 +104,18 @@ function prefix_get_option( $option, $section, $default = '' ) {
 This is an API for the WordPress Settings API
 
 ## Acknowledgments
+
 This is an extended version of [tareq1988](https://github.com/tareq1988/wordpress-settings-api-class) with more features and opinionated changes and additions.
 
 Changelog:
 
-----------------------
+---
+
 ```
+2.2.0 (20 March, 2025)
+------------------------
+- Add option "multiple" to select fields
+
 2.1.1 (19 March, 2024)
 ------------------------
 - Update docs
