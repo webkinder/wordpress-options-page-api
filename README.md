@@ -9,7 +9,7 @@ To install this package, edit your `composer.json` file:
 ```js
 {
     "require": {
-        "webkinder/wordpress-options-page-api": "2.2.0"
+        "webkinder/wordpress-options-page-api": "2.2.1"
     }
 }
 ```
@@ -112,6 +112,10 @@ Changelog:
 ---
 
 ```
+2.2.1 (28 January, 2026)
+------------------------
+- Fix multilang pages field type
+
 2.2.0 (20 March, 2025)
 ------------------------
 - Add option "multiple" to select fields

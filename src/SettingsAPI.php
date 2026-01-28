@@ -294,7 +294,8 @@ class SettingsAPI
 										$type = 'text';
 										$callback = [$this, 'callback_text'];
 										$args['type'] = $type;
-										unset($args['options'], $args['required']);
+										unset($args['options']);
+										$args['required'] = false;
 									}
 
 									// Overwrite the arguments for the hidden translation fields
