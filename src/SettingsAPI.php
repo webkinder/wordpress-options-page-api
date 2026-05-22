@@ -180,7 +180,7 @@ class SettingsAPI
 		if (!empty($this->settings_fields)) {
 			foreach ($this->settings_fields as $section_key => $section) {
 				foreach ($section as $field) {
-					if (isset($field['multilang']) && true === $field['multilang'] && function_exists('icl_object_id')) {
+					if (isset($field['multilang']) && true === $field['multilang']) {
 						$this->multilingual_settings_fields[$section_key][$field['name']] = $field['name'];
 					}
 				}
