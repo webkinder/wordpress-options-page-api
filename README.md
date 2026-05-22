@@ -9,7 +9,7 @@ To install this package, edit your `composer.json` file:
 ```js
 {
     "require": {
-        "webkinder/wordpress-options-page-api": "2.2.2"
+        "webkinder/wordpress-options-page-api": "2.2.3"
     }
 }
 ```
@@ -112,6 +112,10 @@ Changelog:
 ---
 
 ```
+2.2.3 (22 May, 2026)
+------------------------
+- Fix multilang option resolution when WPML loads after set_fields
+
 2.2.2 (28 January, 2026)
 ------------------------
 - Hotfix: Improve backwards compatibility
